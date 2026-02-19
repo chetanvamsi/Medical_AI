@@ -1,3 +1,4 @@
+import plotly.graph_objects as go
 import streamlit as st
 import numpy as np
 import pickle
@@ -267,19 +268,14 @@ def generate_pdf(patient_name, probability, level, fig,
 # ===============================
 if st.button("Predict"):
 
+    # Prepare input
     input_data = np.array([[pregnancies, glucose, bp, skin,
                             insulin, bmi, dpf, age]])
 
+    # Get probability FIRST
     probability = model.predict_proba(input_data)[0][1]
 
-    if patient_name:
-        st.markdown(f"## 🧑 Patient: {patient_name}")
-
-    st.subheader("📊 Risk Assessment")
-    st.progress(float(probability))
-    st.metric("Diabetes Risk Probability", f"{probability*100:.2f}%")
-
-    # Risk Level
+    # Determine Risk Level FIRST
     if probability < threshold:
         level = "LOW RISK"
         banner_color = "#00C853"
@@ -289,6 +285,17 @@ if st.button("Predict"):
     else:
         level = "HIGH RISK"
         banner_color = "#D50000"
+
+    # Show Patient
+    if patient_name:
+        st.markdown(f"## 🧑 Patient: {patient_name}")
+
+    # ===============================
+    # 📊 Risk Assessment
+    # ===============================
+    st.subheader("📊 Risk Assessment")
+    st.progress(float(probability))
+    st.metric("Diabetes Risk Probability", f"{probability*100:.2f}%")
 
     st.markdown(f"""
         <div style="
@@ -304,9 +311,31 @@ if st.button("Predict"):
         </div>
         """, unsafe_allow_html=True)
 
+    # ===============================
+    # 🧭 Risk Gauge (AFTER probability defined)
+    # ===============================
+    st.subheader("🧭 Risk Severity Meter")
+
+    gauge_fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=probability * 100,
+        number={'suffix': "%"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': banner_color},
+            'steps': [
+                {'range': [0, threshold*100], 'color': "#00C853"},
+                {'range': [threshold*100, (threshold+0.3)*100], 'color': "#FFD600"},
+                {'range': [(threshold+0.3)*100, 100], 'color': "#D50000"}
+            ],
+        }
+    ))
+
+    gauge_fig.update_layout(height=350)
+    st.plotly_chart(gauge_fig, use_container_width=True)
 
     # ===============================
-    # 🔍 SHAP Graph
+    # 🔍 SHAP Explanation
     # ===============================
     st.subheader("🔍 Feature Impact Explanation")
 
@@ -324,7 +353,6 @@ if st.button("Predict"):
     total = np.sum(abs_values)
 
     percentage_contributions = (abs_values / total) * 100
-
 
     sorted_idx = np.argsort(np.abs(contributions))
     sorted_features = [feature_names[i] for i in sorted_idx]
@@ -344,17 +372,15 @@ if st.button("Predict"):
     # 📄 PDF Download
     # ===============================
     pdf_file = generate_pdf(
-    patient_name,
-    probability,
-    level,
-    fig,
-    feature_names,
-    percentage_contributions,
-    glucose,
-    bmi
+        patient_name,
+        probability,
+        level,
+        fig,
+        feature_names,
+        percentage_contributions,
+        glucose,
+        bmi
     )
-
-
 
     st.download_button(
         "📄 Download Risk Report",
@@ -363,4 +389,3 @@ if st.button("Predict"):
         mime="application/pdf"
     )
 
-    
