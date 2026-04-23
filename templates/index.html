@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Risk Prediction | AI Diagnostics</title>
+    
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../static/style.css">
+    
+</head>
+<body>
+
+    <!-- Top Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-notes-medical"></i>
+            <span>MedPredict AI</span>
+        </div>
+        <div class="nav-title">
+            Diabetes Risk Prediction
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <!-- Main Form Card -->
+        <div class="glass-card form-card">
+            <div class="card-header">
+                <h2>Health Metrics</h2>
+                <p>Provide accurate patient data to generate an AI assessment</p>
+            </div>
+
+            <!-- Form -->
+            <form action="{{ url_for('predict') }}" method="POST">
+                <div class="form-grid">
+                    
+                    <!-- Pregnancies -->
+                    <div class="input-group">
+                        <label for="pregnancies">Pregnancies</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-baby input-icon"></i>
+                            <input type="number" id="pregnancies" name="pregnancies" required min="0" placeholder="Count (e.g. 1)" value="{{ pregnancies if pregnancies is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Glucose -->
+                    <div class="input-group">
+                        <label for="glucose">Glucose</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-cubes-stacked input-icon"></i>
+                            <input type="number" id="glucose" name="glucose" required min="0" step="any" placeholder="mg/dL (e.g. 120)" value="{{ glucose if glucose is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Blood Pressure -->
+                    <div class="input-group">
+                        <label for="blood_pressure">Blood Pressure</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-heart-pulse input-icon"></i>
+                            <input type="number" id="blood_pressure" name="blood_pressure" required min="0" step="any" placeholder="mmHg (e.g. 80)" value="{{ blood_pressure if blood_pressure is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Skin Thickness -->
+                    <div class="input-group">
+                        <label for="skin_thickness">Skin Thickness</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-layer-group input-icon"></i>
+                            <input type="number" id="skin_thickness" name="skin_thickness" required min="0" step="any" placeholder="mm (e.g. 20)" value="{{ skin_thickness if skin_thickness is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Insulin -->
+                    <div class="input-group">
+                        <label for="insulin">Insulin</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-vial input-icon"></i>
+                            <input type="number" id="insulin" name="insulin" required min="0" step="any" placeholder="IU/mL (e.g. 85)" value="{{ insulin if insulin is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- BMI -->
+                    <div class="input-group">
+                        <label for="bmi">BMI</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-weight-scale input-icon"></i>
+                            <input type="number" id="bmi" name="bmi" required min="0" step="any" placeholder="kg/m² (e.g. 25.5)" value="{{ bmi if bmi is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- DPF -->
+                    <div class="input-group">
+                        <label for="dpf">Pedigree Function</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-dna input-icon"></i>
+                            <input type="number" id="dpf" name="dpf" required min="0" step="any" placeholder="Score (e.g. 0.5)" value="{{ dpf if dpf is defined else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Age -->
+                    <div class="input-group">
+                        <label for="age">Age</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-calendar-days input-icon"></i>
+                            <input type="number" id="age" name="age" required min="0" placeholder="Years (e.g. 35)" value="{{ age if age is defined else '' }}">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-gradient">
+                        Predict Risk <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Dynamic Results Section -->
+{% if prediction_text %}
+<div class="result-card fade-in-up 
+    {% if risk_level == 'LOW RISK' %}risk-low
+    {% elif risk_level == 'MODERATE RISK' %}risk-moderate
+    {% else %}risk-high
+    {% endif %}">
+
+    <div class="result-icon">
+        {% if risk_level == 'LOW RISK' %}
+            <i class="fa-solid fa-shield-check"></i>
+        {% elif risk_level == 'MODERATE RISK' %}
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        {% else %}
+            <i class="fa-solid fa-circle-exclamation"></i>
+        {% endif %}
+    </div>
+
+    <div class="result-content">
+        <span class="badge">{{ risk_level }}</span>
+        <h3>{{ prediction_text }}</h3>
+        <p class="prob-text">{{ probability_text }}</p>
+
+        {% if reasons %}
+        <div class="reason-section">
+            <h4>Risk Factors</h4>
+            <ul class="reason-list">
+                {% for r in reasons %}
+                    <li>✔ {{ r }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endif %}
+
+        <!-- Error Handling -->
+        {% if error_text %}
+        <div class="result-card fade-in-up error-card">
+            <div class="result-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="result-content">
+                <span class="badge badge-error">System Error</span>
+                <h3>Prediction Failed</h3>
+                <p class="prob-text">{{ error_text }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 MedPredict AI. Secure Clinical Demonstrator.</p>
+    </footer>
+
+</body>
+</html>
