@@ -126,4 +126,8 @@ It is **not a medical diagnosis tool**. Always consult a healthcare professional
 * 🗄️ Store prediction history
 
 ---
+## 📸 Application Preview
 
+<p align="center">
+  <img src="screenshot.png" width="700">
+</p>
